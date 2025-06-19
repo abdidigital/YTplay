@@ -64,7 +64,10 @@ async function searchVideos() {
     resultsContainer.appendChild(col);
   });
 }
-
+function setCategory(category) {
+  document.getElementById("query").value = category;
+  searchVideos();
+}
 function playVideo(videoId) {
   const playerContainer = document.getElementById("player-container");
   const resultsContainer = document.getElementById("results");
