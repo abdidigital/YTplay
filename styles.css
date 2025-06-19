@@ -98,6 +98,22 @@ a:hover {
     -webkit-line-clamp: 2; /* Jumlah baris */
     -webkit-box-orient: vertical;
 }
+/* Styling for Ad Slots */
+.ad-slot {
+    display: block; /* Pastikan mengambil lebar penuh container */
+    max-width: 468px; /* Batasi lebar maksimum */
+    margin-left: auto;
+    margin-right: auto;
+    overflow: hidden; /* Pastikan gambar tidak meluap */
+    border: 1px solid #ddd; /* Opsional: tambahkan border */
+    border-radius: 5px; /* Opsional: sudut membulat */
+}
+
+.ad-slot img {
+    display: block;
+    width: 100%; /* Agar gambar mengisi slot */
+    height: auto; /* Jaga rasio aspek */
+}
 
 .video-card .card-text.small {
     font-size: 0.85rem; /* Ukuran font channel */
