@@ -14,7 +14,7 @@ function onYouTubeIframeAPIReady() {
 document.addEventListener('DOMContentLoaded', function () {
     const tg = window.Telegram.WebApp;
     tg.ready();
-    const YOUTUBE_API_KEY = 'AIzaSyBXEhmJ_a91vXpSiSnkRpi6_WbVTL2Vz0A';
+    const YOUTUBE_API_KEY = 'AIzaSyBXEhmJ_a91vXpSiSnkRpi6_WbVTL2Vz0A'; // API Key Anda sudah di sini.
 
     // Elemen DOM
     const searchInput = document.getElementById('searchInput');
@@ -27,12 +27,9 @@ document.addEventListener('DOMContentLoaded', function () {
     const videoModalLabel = document.getElementById('videoModalLabel');
     const relatedVideosContainer = document.getElementById('relatedVideosContainer');
     
-    // Variabel dan elemen DOM untuk iklan dihapus
-
-    if (YOUTUBE_API_KEY === 'AIzaSyBXEhmJ_a91vXpSiSnkRpi6_WbVTL2Vz0A') {
-        resultsContainer.innerHTML = `<div class="col-12"><div class="alert alert-danger"><strong>Kesalahan:</strong> Kunci API YouTube belum diatur.</div></div>`;
-        return;
-    }
+    // ======================================================
+    // BLOK IF YANG BERMASALAH TELAH DIHAPUS DARI SINI
+    // ======================================================
 
     // Fungsi onPlayerStateChange tetap ada untuk fitur autoplay video selanjutnya
     function onPlayerStateChange(event) {
