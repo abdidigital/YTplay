@@ -1,4 +1,4 @@
-const apiKey = "MASUKKAN_API_KEY_YOUTUBE_KAMU";
+const apiKey = "AIzaSyCFMAiplOEzTreGfkKpQT4f6blI-bfcoYk";
 
 async function searchVideos() {
   const query = document.getElementById("query").value.trim();
