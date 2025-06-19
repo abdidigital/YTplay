@@ -35,7 +35,15 @@
       <button class="btn btn-primary" onclick="searchVideos()">Cari</button>
     </div>
   </div>
-
+<!-- KATEGORI -->
+<div id="categories" class="d-flex flex-wrap gap-2 mb-3">
+  <button class="btn btn-outline-primary btn-sm" onclick="setCategory('musik')">🎵 Musik</button>
+  <button class="btn btn-outline-danger btn-sm" onclick="setCategory('film')">🎬 Film</button>
+  <button class="btn btn-outline-success btn-sm" onclick="setCategory('game')">🎮 Game</button>
+  <button class="btn btn-outline-warning btn-sm" onclick="setCategory('anime')">📺 Anime</button>
+  <button class="btn btn-outline-info btn-sm" onclick="setCategory('berita')">📢 Berita</button>
+  <button class="btn btn-outline-secondary btn-sm" onclick="setCategory('komedi')">😂 Komedi</button>
+</div>
   <!-- Pemutar Video -->
   <div id="player-container" class="container mb-4" style="display:none;"></div>
 
