@@ -33,3 +33,6 @@ body {
 .video-card button {
   margin: 5px;
 }
+#player-container {
+  margin-top: 20px;
+}
