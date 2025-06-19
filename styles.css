@@ -1,0 +1,35 @@
+body {
+  font-family: sans-serif;
+  text-align: center;
+  padding: 20px;
+  background: #fff;
+}
+
+.search {
+  margin: 20px;
+}
+
+#results {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.video-card {
+  width: 90%;
+  max-width: 400px;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+}
+
+.video-card img {
+  width: 100%;
+  border-radius: 6px;
+}
+
+.video-card button {
+  margin: 5px;
+}
