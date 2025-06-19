@@ -271,6 +271,10 @@ document.addEventListener('DOMContentLoaded', function () {
         
         categoryContainer.addEventListener('click', (event) => {
             const btn = event.target.closest('.category-btn');
+            tag.src = "https://www.youtube.com/iframe_api"; 
+    const firstScriptTag = document.getElementsByTagName('script')[0];
+    firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+});
             if (btn) {
                 const categoryId = btn.dataset.categoryId;
                 const categoryName = btn.dataset.categoryName;
