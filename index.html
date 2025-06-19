@@ -1,71 +1,83 @@
 <!DOCTYPE html><html lang="id">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>🎵 Play YouTube</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YouTube Player WebApp</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
     body {
       background-color: #f8f9fa;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-family: Arial, sans-serif;
     }
-    .logo {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-top: 1rem;
-    }
-    .logo img {
-      max-height: 50px;
-      margin-right: 10px;
+    header, footer {
+      background-color: #343a40;
+      color: white;
+      padding: 10px 0;
+      text-align: center;
     }
     .search-bar {
-      max-width: 500px;
-      margin: 1rem auto;
+      margin: 20px auto;
+      max-width: 600px;
+      text-align: center;
     }
-    .video-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    #results {
+      display: flex;
+      flex-wrap: wrap;
       gap: 1rem;
-      padding: 1rem;
+      justify-content: center;
     }
     .video-card {
-      background: white;
-      padding: 10px;
-      border-radius: 10px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      width: 100%;
+      max-width: 300px;
     }
-    footer {
-      background-color: #f1f1f1;
-      padding: 1rem;
+    #player-container iframe {
+      border-radius: 8px;
+    }
+    #video-ad {
+      margin-top: 15px;
       text-align: center;
-      margin-top: 2rem;
     }
   </style>
 </head>
 <body>
-  <header class="text-center py-3 bg-white shadow-sm">
-    <div class="logo">
-      <img src="https://upload.wikimedia.org/wikipedia/commons/b/b8/YouTube_Logo_2017.svg" alt="YouTube Logo" />
-      <h5 class="m-0">YouTube WebApp</h5>
-    </div>
-  </header>  <div class="search-bar input-group">
+  <header>
+    <h2>WebApp Pemutar YouTube</h2>
+  </header>  <div class="container">
+    <!-- Ad Slot Atas -->
+    <div class="text-center my-3">
+      <script type="text/javascript">
+        atOptions = {
+          'key': 'ac316fe8b253dbbf12c471c0c8be41c2',
+          'format': 'iframe',
+          'height': 60,
+          'width': 468,
+          'params': {}
+        };
+      </script>
+      <script type="text/javascript" src="//www.highperformanceformat.com/ac316fe8b253dbbf12c471c0c8be41c2/invoke.js"></script>
+    </div><!-- Logo -->
+<div class="text-center mb-4">
+  <img src="https://upload.wikimedia.org/wikipedia/commons/b/b8/YouTube_Logo_2017.svg" alt="YouTube Logo" width="200" />
+</div>
+
+<!-- Form Pencarian -->
+<div class="search-bar">
+  <div class="input-group">
     <input type="text" class="form-control" id="query" placeholder="Cari video...">
-    <button class="btn btn-danger" onclick="searchVideos()">Cari</button>
-  </div>  <!-- Iklan pencarian -->  <div class="text-center mb-3">
-    <script type="text/javascript">
-	atOptions = {
-		'key' : 'ac316fe8b253dbbf12c471c0c8be41c2',
-		'format' : 'iframe',
-		'height' : 60,
-		'width' : 468,
-		'params' : {}
-	};
-</script>
-<script type="text/javascript" src="//www.highperformanceformat.com/ac316fe8b253dbbf12c471c0c8be41c2/invoke.js"></script>
+    <button class="btn btn-primary" onclick="searchVideos()">Cari</button>
+  </div>
+</div>
+
+<!-- Player & Hasil Pencarian -->
+<div id="player-container" class="mb-3"></div>
+<div id="video-ad"></div>
+<div id="results" class="row row-cols-1 row-cols-md-2 g-4"></div>
+
+  </div>  <footer class="mt-5">
+    <p>&copy; 2025 WebApp YouTube - Dibuat oleh Kamu</p>
+    <div class="text-center">
+      <script async="async" data-cfasync="false" src="//pl26955455.profitableratecpm.com/e3b9b0e9cdd83dea5f5d3e2b633ff801/invoke.js"></script>
+      <div id="container-e3b9b0e9cdd83dea5f5d3e2b633ff801"></div>
     </div>
-  </div>  <div id="player-container" class="container my-4" style="display:none;"></div>
-  <div id="results" class="video-grid"></div>  <footer>
-    <small>&copy; 2025 YouTube WebApp | Powered by Telegram & YouTube API</small>
   </footer>  <script src="script.js"></script></body>
 </html>
