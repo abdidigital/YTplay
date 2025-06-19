@@ -8,7 +8,10 @@ const defaultQueries = [
 function getRandomQuery() {
   return defaultQueries[Math.floor(Math.random() * defaultQueries.length)];
 }
-
+function setCategory(category) {
+  document.getElementById("query").value = category;
+  searchVideos();
+}
 window.onload = () => {
   const randomQuery = getRandomQuery();
   document.getElementById("query").value = randomQuery;
