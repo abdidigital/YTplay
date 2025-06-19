@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', function () {
     tg.ready();
 
     // --- KONFIGURASI PENTING ---
-    const YOUTUBE_API_KEY = 'GANTI_DENGAN_API_KEY_ANDA';
+    const YOUTUBE_API_KEY = 'AIzaSyBXEhmJ_a91vXpSiSnkRpi6_WbVTL2Vz0A';
     // -------------------------
 
     const searchButton = document.getElementById('searchButton');
