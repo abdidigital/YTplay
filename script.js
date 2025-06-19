@@ -40,7 +40,7 @@ document.addEventListener('DOMContentLoaded', function () {
     };
 
     // Pengecekan API Key di awal
-    if (YOUTUBE_API_KEY === 'GANTI_DENGAN_API_KEY_ANDA') {
+    if (YOUTUBE_API_KEY === 'AIzaSyBXEhmJ_a91vXpSiSnkRpi6_WbVTL2Vz0A') {
         showError("Kunci API YouTube belum diatur. Silakan edit file script.js dan ganti placeholder 'GANTI_DENGAN_API_KEY_ANDA'.");
         return; // Hentikan eksekusi jika API Key belum diisi
     }
