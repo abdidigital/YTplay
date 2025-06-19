@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const videoModalLabel = document.getElementById('videoModalLabel');
 
     let youtubePlayerAPI; 
-    let currentVideoPlaylist = []; // INI PENTING: Akan menyimpan data items lengkap dari API
+    let currentVideoPlaylist = []; 
     let currentVideoIndex = -1; 
 
     window.onYouTubeIframeAPIReady = function() {
@@ -57,8 +57,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const playVideoInModal = (videoId, title, playlist = [], startIndex = -1) => {
         videoModalLabel.textContent = title;
-        currentVideoPlaylist = playlist; // Pastikan playlist di-update
-        currentVideoIndex = startIndex; // Pastikan indeks di-update
+        currentVideoPlaylist = playlist; 
+        currentVideoIndex = startIndex; 
 
         if (youtubePlayerAPI && typeof youtubePlayerAPI.loadVideoById === 'function') {
             console.log('Memuat video dengan YouTube Player API:', videoId);
@@ -74,7 +74,8 @@ document.addEventListener('DOMContentLoaded', function () {
         if (currentVideoPlaylist.length > 0 && currentVideoIndex < currentVideoPlaylist.length - 1) {
             currentVideoIndex++;
             const nextVideo = currentVideoPlaylist[currentVideoIndex];
-            const nextVideoId = nextVideo.id.videoId || nextVideo.id; 
+            // ID video dijamin ada di nextVideo.id.videoId karena sudah di-map sebelumnya
+            const nextVideoId = nextVideo.id.videoId; 
             const nextVideoTitle = nextVideo.snippet.title;
 
             console.log(`Memutar video selanjutnya: ${nextVideoTitle} (ID: ${nextVideoId})`);
@@ -113,11 +114,12 @@ document.addEventListener('DOMContentLoaded', function () {
             }
             const data = await response.json();
             
-            // --- PERBAIKAN PENTING DI SINI ---
-            // Simpan seluruh data.items ke currentVideoPlaylist setelah pencarian
-            currentVideoPlaylist = data.items;
+            // --- PERBAIKAN: Map items agar id.videoId selalu ada ---
+            currentVideoPlaylist = data.items.map(item => ({
+                id: { videoId: item.id.videoId || item.id }, // Pastikan id.videoId selalu ada
+                snippet: item.snippet,
+            }));
             console.log('Playlist setelah pencarian:', currentVideoPlaylist);
-            // --- AKHIR PERBAIKAN ---
 
             displayResults(data.items, `Hasil Pencarian: "${query}"`);
         } catch (error) {
@@ -183,7 +185,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     };
     
-    // Event listener untuk memutar video saat kartu diklik
     resultsContainer.addEventListener('click', (event) => {
         const card = event.target.closest('.video-card');
         if (card) {
@@ -191,11 +192,8 @@ document.addEventListener('DOMContentLoaded', function () {
             const videoTitle = decodeURIComponent(card.dataset.videoTitle);
             const videoIndex = parseInt(card.dataset.videoIndex); 
             
-            // --- PERBAIKAN PENTING DI SINI ---
-            // Gunakan `currentVideoPlaylist` yang sudah diisi oleh `performSearch`
-            // Tidak perlu lagi me-parse DOM untuk mendapatkan playlist.
+            // Menggunakan currentVideoPlaylist yang sudah di-map dan dijamin konsisten
             playVideoInModal(videoId, videoTitle, currentVideoPlaylist, videoIndex);
-            // --- AKHIR PERBAIKAN ---
         }
     });
 
@@ -204,7 +202,7 @@ document.addEventListener('DOMContentLoaded', function () {
             youtubePlayerAPI.stopVideo();
             console.log('Video dihentikan.');
         }
-        youtubeIframe.src = '';
+        youtubeIframe.src = ''; 
     });
     
     searchButton.addEventListener('click', performSearch);
@@ -243,14 +241,14 @@ document.addEventListener('DOMContentLoaded', function () {
             }
             const data = await response.json();
             
-            // --- PERBAIKAN PENTING DI SINI ---
-            // Simpan seluruh data.items ke currentVideoPlaylist saat kategori dimuat
-            currentVideoPlaylist = data.items;
+            // --- PERBAIKAN: Map items agar id.videoId selalu ada ---
+            currentVideoPlaylist = data.items.map(item => ({
+                id: { videoId: item.id.videoId || item.id }, // Pastikan id.videoId selalu ada
+                snippet: item.snippet,
+            }));
             console.log('Playlist setelah memuat kategori:', currentVideoPlaylist);
-            // --- AKHIR PERBAIKAN ---
 
             displayResults(data.items, categoryName);
-
         } catch (error) {
             console.error('Error fetching default videos:', error);
             resultsContainer.innerHTML = `<div class="alert alert-danger" role="alert"><strong>Gagal memuat video:</strong> ${error.message}</div>`;
