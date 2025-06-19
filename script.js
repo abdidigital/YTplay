@@ -1,4 +1,4 @@
-const API_KEY = 'AIzaSyCFMAiplOEzTreGfkKpQT4f6blI-bfcoYk'; // Ganti dengan API key Anda
+const API_KEY = 'AIzaSyBXEhmJ_a91vXpSiSnkRpi6_WbVTL2Vz0A'; // Ganti dengan API key Anda
 let nextPageToken = '';
 let currentQuery = '';
 
