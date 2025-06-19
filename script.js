@@ -22,7 +22,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // Pastikan kunci ini tidak memiliki pembatasan (restrictions: None)
     // di Google Cloud Console untuk menghindari masalah.
     // =================================================================
-    const YOUTUBE_API_KEY = 'AIzaSyBXEhmJ_a91vXpSiSnkRpi6_WbVTL2Vz0A';
+    const YOUTUBE_API_KEY = 'AIzaSyAkgcQAn-vxpxp2UoPZ2zQLKwfVNLWRtl0';
 
     // Elemen DOM
     const searchInput = document.getElementById('searchInput');
@@ -41,7 +41,7 @@ document.addEventListener('DOMContentLoaded', function () {
         loadingSpinner.style.display = 'none';
     };
 
-    if (YOUTUBE_API_KEY === 'GANTI_DENGAN_API_KEY_ANDA') {
+    if (YOUTUBE_API_KEY === 'AIzaSyAkgcQAn-vxpxp2UoPZ2zQLKwfVNLWRtl0') {
         showError("Kunci API YouTube belum diatur di file script.js.");
         return;
     }
