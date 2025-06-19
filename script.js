@@ -1,128 +1,169 @@
 const apiKey = "AIzaSyCFMAiplOEzTreGfkKpQT4f6blI-bfcoYk";
-const defaultQueries = ["musik", "drama korea", "komedi", "gameplay", "trending", "movie trailer", "dangdut", "news", "anime", "vlog"];
-let lastResults = [];
+const defaultQueries = [
+  "musik", "drama korea", "komedi", "gameplay", "trending",
+  "movie trailer", "dangdut", "news", "anime", "vlog"
+];
 
+// Tampilkan query random di halaman awal
 window.onload = () => {
-  renderCategories();
   const randomQuery = getRandomQuery();
   document.getElementById("query").value = randomQuery;
-  searchVideos();
+  searchVideos(randomQuery);
+  displayCategories();
+  setCurrentYear();
 };
 
+// Ambil query random
 function getRandomQuery() {
   return defaultQueries[Math.floor(Math.random() * defaultQueries.length)];
 }
 
-function renderCategories() {
-  const container = document.getElementById("categories");
+// Atur tahun di footer
+function setCurrentYear() {
+  document.getElementById("year").textContent = new Date().getFullYear();
+}
+
+// Tampilkan kategori
+function displayCategories() {
+  const categoriesContainer = document.getElementById("categories");
+  categoriesContainer.innerHTML = "";
+
   defaultQueries.forEach(cat => {
-    const btn = document.createElement("button");
-    btn.className = "btn btn-outline-primary btn-sm category-btn";
-    btn.innerText = cat;
-    btn.onclick = () => {
+    const button = document.createElement("button");
+    button.className = "btn btn-outline-light btn-sm m-1";
+    button.innerText = cat;
+    button.onclick = () => {
       document.getElementById("query").value = cat;
-      searchVideos();
+      searchVideos(cat);
     };
-    container.appendChild(btn);
+    categoriesContainer.appendChild(button);
   });
 }
 
-async function searchVideos() {
+// Event pencarian manual
+document.getElementById("searchBtn").addEventListener("click", () => {
   const query = document.getElementById("query").value.trim();
+  if (query) searchVideos(query);
+});
+
+async function searchVideos(query) {
   const resultsContainer = document.getElementById("results");
   const playerContainer = document.getElementById("player-container");
-
+  resultsContainer.innerHTML = "<p class='text-center'>Memuat...</p>";
+  resultsContainer.style.display = "grid";
   playerContainer.style.display = "none";
-  resultsContainer.innerHTML = "<p>Loading...</p>";
 
-  if (!query) {
-    resultsContainer.innerHTML = "<p>Ketik kata kunci pencarian.</p>";
-    return;
-  }
+  try {
+    const res = await fetch(
+      `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=10&q=${encodeURIComponent(query)}&type=video&key=${apiKey}`
+    );
+    const data = await res.json();
+    resultsContainer.innerHTML = "";
 
-  const res = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=10&q=${encodeURIComponent(query)}&key=${apiKey}&type=video`);
-  const data = await res.json();
-  resultsContainer.innerHTML = "";
-
-  if (!data.items || data.items.length === 0) {
-    resultsContainer.innerHTML = "<p>Tidak ada hasil ditemukan.</p>";
-    return;
-  }
-
-  lastResults = data.items;
-  data.items.forEach((video, index) => {
-    const { videoId } = video.id;
-    const { title, thumbnails } = video.snippet;
-
-    const col = document.createElement("div");
-    col.className = "col-md-6 video-card";
-
-    const card = document.createElement("div");
-    card.className = "card h-100";
-    card.innerHTML = `
-      <img src="${thumbnails.medium.url}" class="card-img-top" alt="${title}">
-      <div class="card-body">
-        <h6 class="card-title">${title}</h6>
-        <button class="btn btn-sm btn-danger me-2" onclick="playVideo('${videoId}')">▶️ Putar</button>
-        <button class="btn btn-sm btn-secondary" onclick="downloadVideo('${videoId}')">⬇️ Download</button>
-      </div>
-    `;
-
-    col.appendChild(card);
-    resultsContainer.appendChild(col);
-
-    if (index === 4) {
-      const ad = document.createElement("div");
-      ad.className = "col-12 text-center my-3";
-      ad.innerHTML = `
-        <script async="async" data-cfasync="false" src="//pl26955455.profitableratecpm.com/e3b9b0e9cdd83dea5f5d3e2b633ff801/invoke.js"></script>
-        <div id="container-e3b9b0e9cdd83dea5f5d3e2b633ff801"></div>
-      `;
-      resultsContainer.appendChild(ad);
+    if (!data.items || data.items.length === 0) {
+      resultsContainer.innerHTML = "<p class='text-center'>Tidak ada hasil ditemukan.</p>";
+      return;
     }
-  });
+
+    data.items.forEach((video, index) => {
+      const { videoId } = video.id;
+      const { title, thumbnails } = video.snippet;
+
+      const col = document.createElement("div");
+      col.className = "col";
+      col.innerHTML = `
+        <div class="card h-100 video-card">
+          <img src="${thumbnails.medium.url}" class="card-img-top" alt="${title}">
+          <div class="card-body">
+            <h6 class="card-title text-truncate" title="${title}">${title}</h6>
+            <button class="btn btn-sm btn-danger me-2" onclick="playVideo('${videoId}', '${query}')">▶️ Putar</button>
+            <button class="btn btn-sm btn-secondary" onclick="downloadVideo('${videoId}')">⬇️ Download</button>
+          </div>
+        </div>
+      `;
+      resultsContainer.appendChild(col);
+
+      // Sisipkan iklan setelah video ke-2
+      if (index === 1) {
+        const adCol = document.createElement("div");
+        adCol.className = "col";
+        adCol.innerHTML = `
+          <div class="card p-2 text-center bg-light border">
+            <p class="mb-1">🎯 Iklan</p>
+            <script async="async" data-cfasync="false" src="//pl26955455.profitableratecpm.com/e3b9b0e9cdd83dea5f5d3e2b633ff801/invoke.js"></script>
+            <div id="container-e3b9b0e9cdd83dea5f5d3e2b633ff801"></div>
+          </div>
+        `;
+        resultsContainer.appendChild(adCol);
+      }
+    });
+  } catch (error) {
+    resultsContainer.innerHTML = `<p class='text-danger text-center'>Gagal memuat video. ${error.message}</p>`;
+  }
 }
 
-function playVideo(videoId) {
+function playVideo(videoId, query) {
   const playerContainer = document.getElementById("player-container");
   const resultsContainer = document.getElementById("results");
-
   resultsContainer.style.display = "none";
   playerContainer.style.display = "block";
 
   playerContainer.innerHTML = `
-    <div class="ratio ratio-16x9 mb-3">
-      <iframe src="https://www.youtube.com/embed/${videoId}?autoplay=1&playlist=${videoId}&loop=1"
-        frameborder="0" allowfullscreen allow="autoplay; encrypted-media"></iframe>
+    <div class="ratio ratio-16x9">
+      <iframe src="https://www.youtube.com/embed/${videoId}?autoplay=1" frameborder="0" allowfullscreen allow="autoplay; encrypted-media"></iframe>
     </div>
-    <div class="text-center">
-      <button class="btn btn-outline-secondary" onclick="backToResults()">🔙 Kembali ke Hasil</button>
+    <div class="text-center my-3">
+      <button class="btn btn-light" onclick="backToResults()">🔙 Kembali ke Hasil</button>
     </div>
-    <div class="mt-4">
-      <h5>🎯 Video Terkait:</h5>
-      <div class="row">
-        ${lastResults.map(v => `
-          <div class="col-6 col-md-3 mb-3">
-            <img src="${v.snippet.thumbnails.default.url}" alt="${v.snippet.title}" class="img-fluid rounded" onclick="playVideo('${v.id.videoId}')">
-            <small>${v.snippet.title}</small>
-          </div>
-        `).join("")}
-      </div>
+    <div id="related-videos">
+      <h5>🎯 Video Terkait :</h5>
+      <div id="related-list" class="row row-cols-1 row-cols-md-2 g-3"></div>
     </div>
   `;
-  document.getElementById("video-ad").innerHTML = `
-    <script async="async" data-cfasync="false" src="//pl26955455.profitableratecpm.com/e3b9b0e9cdd83dea5f5d3e2b633ff801/invoke.js"></script>
-    <div id="container-e3b9b0e9cdd83dea5f5d3e2b633ff801"></div>
-  `;
+
+  loadRelatedVideos(query);
 }
 
 function backToResults() {
   document.getElementById("player-container").style.display = "none";
-  document.getElementById("results").style.display = "flex";
-  document.getElementById("video-ad").innerHTML = "";
+  document.getElementById("results").style.display = "grid";
+}
+
+async function loadRelatedVideos(query) {
+  const container = document.getElementById("related-list");
+  container.innerHTML = "<p>Loading...</p>";
+
+  try {
+    const res = await fetch(
+      `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=10&q=${encodeURIComponent(query)}&type=video&key=${apiKey}`
+    );
+    const data = await res.json();
+    container.innerHTML = "";
+
+    data.items.forEach(video => {
+      const { videoId } = video.id;
+      const { title, thumbnails } = video.snippet;
+
+      const col = document.createElement("div");
+      col.className = "col";
+      col.innerHTML = `
+        <div class="card h-100">
+          <img src="${thumbnails.medium.url}" class="card-img-top" alt="${title}">
+          <div class="card-body p-2">
+            <h6 class="card-title text-truncate" title="${title}">${title}</h6>
+            <button class="btn btn-sm btn-danger me-2" onclick="playVideo('${videoId}', '${query}')">▶️</button>
+            <button class="btn btn-sm btn-secondary" onclick="downloadVideo('${videoId}')">⬇️</button>
+          </div>
+        </div>
+      `;
+      container.appendChild(col);
+    });
+  } catch (error) {
+    container.innerHTML = `<p class="text-danger">Gagal memuat video terkait.</p>`;
+  }
 }
 
 function downloadVideo(videoId) {
   const url = `https://www.y2mate.com/youtube/${videoId}`;
   window.open(url, "_blank");
-}
+    }
