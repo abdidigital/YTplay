@@ -1,4 +1,5 @@
-// YouTube API Key (Untuk tujuan demo. Dalam produksi, pertimbangkan untuk menyimpannya dengan lebih aman)
+// YouTube API Key (Pastikan ini aman dalam produksi, ini hanya untuk contoh)
+// Pastikan API key ini sudah diaktifkan untuk YouTube Data API v3 di Google Cloud Console Anda.
 const YOUTUBE_API_KEY = 'AIzaSyCFMAiplOEzTreGfkKpQT4f6blI-bfcoYk';
 const BASE_URL = 'https://www.googleapis.com/youtube/v3/';
 
@@ -63,8 +64,10 @@ async function fetchVideos(query, videoId = null, pageToken = '') {
     try {
         const response = await fetch(url);
         if (!response.ok) {
+            // Jika respons tidak OK, coba baca error message dari body respons
             const errorData = await response.json();
-            throw new Error(`YouTube API Error: ${response.status} - ${errorData.error.message}`);
+            const errorMessage = errorData.error && errorData.error.message ? errorData.error.message : `Error tidak diketahui: ${response.status}`;
+            throw new Error(`YouTube API Error (${response.status}): ${errorMessage}`);
         }
         const data = await response.json();
 
@@ -234,4 +237,4 @@ document.addEventListener('DOMContentLoaded', () => {
     currentSearchQuery = initialQuery; // Simpan kueri awal
     performSearch(initialQuery); // Lakukan pencarian awal
 });
-      
+                   
