@@ -6,39 +6,56 @@ async function searchVideos() {
   const playerContainer = document.getElementById("player-container");
 
   playerContainer.style.display = "none";
-  resultsContainer.innerHTML = "Loading...";
+  resultsContainer.innerHTML = `
+    <div class="text-center w-100">
+      <div class="spinner-border text-primary" role="status"></div>
+      <p>Memuat hasil...</p>
+    </div>
+  `;
 
   if (!query) {
-    resultsContainer.innerHTML = "Ketik kata kunci pencarian.";
+    resultsContainer.innerHTML = `<p class="text-danger">Ketik kata kunci pencarian.</p>`;
     return;
   }
 
-  const res = await fetch(
-    `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=5&q=${encodeURIComponent(query)}&key=${apiKey}&type=video`
-  );
+  try {
+    const res = await fetch(
+      `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=10&q=${encodeURIComponent(query)}&key=${apiKey}&type=video`
+    );
+    const data = await res.json();
 
-  const data = await res.json();
+    if (!data.items) {
+      resultsContainer.innerHTML = `<p class="text-danger">Gagal mengambil data.</p>`;
+      return;
+    }
 
-  if (!data.items) {
-    resultsContainer.innerHTML = "Gagal mengambil data.";
-    return;
+    resultsContainer.innerHTML = ''; // Kosongkan
+    data.items.forEach(video => {
+      const { videoId } = video.id;
+      const { title, thumbnails } = video.snippet;
+
+      const col = document.createElement("div");
+      col.className = "col-6"; // 2 kolom per baris
+
+      col.innerHTML = `
+        <div class="card h-100 shadow-sm">
+          <img src="${thumbnails.medium.url}" class="card-img-top" alt="${title}">
+          <div class="card-body p-2">
+            <h6 class="card-title" style="font-size:14px;">${title}</h6>
+            <div class="d-grid gap-2">
+              <button class="btn btn-sm btn-primary" onclick="playVideo('${videoId}')">▶️ Putar</button>
+              <button class="btn btn-sm btn-outline-secondary" onclick="downloadVideo('${videoId}')">⬇️ Download</button>
+            </div>
+          </div>
+        </div>
+      `;
+
+      resultsContainer.appendChild(col);
+    });
+  } catch (err) {
+    console.error(err);
+    resultsContainer.innerHTML = `<p class="text-danger">Terjadi kesalahan saat mengambil video.</p>`;
   }
-
-  resultsContainer.innerHTML = "";
-  data.items.forEach(video => {
-    const { videoId } = video.id;
-    const { title, thumbnails } = video.snippet;
-
-    const card = document.createElement("div");
-    card.className = "video-card";
-    card.innerHTML = `
-      <img src="${thumbnails.medium.url}" alt="${title}" />
-      <h4>${title}</h4>
-      <button onclick="playVideo('${videoId}')">▶️ Putar</button>
-      <button onclick="downloadVideo('${videoId}')">⬇️ Download</button>
-    `;
-    resultsContainer.appendChild(card);
-  });
 }
 
 function playVideo(videoId) {
@@ -46,10 +63,10 @@ function playVideo(videoId) {
   const resultsContainer = document.getElementById("results");
 
   playerContainer.innerHTML = `
-    <iframe width="100%" height="250" src="https://www.youtube.com/embed/${videoId}?autoplay=1" 
-      frameborder="0" allowfullscreen allow="autoplay; encrypted-media"></iframe>
-    <br/>
-    <button onclick="backToResults()">🔙 Kembali ke Hasil</button>
+    <div class="ratio ratio-16x9 mb-3">
+      <iframe src="https://www.youtube.com/embed/${videoId}?autoplay=1" allowfullscreen allow="autoplay; encrypted-media"></iframe>
+    </div>
+    <button class="btn btn-secondary" onclick="backToResults()">🔙 Kembali ke Hasil</button>
   `;
 
   playerContainer.style.display = "block";
@@ -58,7 +75,7 @@ function playVideo(videoId) {
 
 function backToResults() {
   document.getElementById("player-container").style.display = "none";
-  document.getElementById("results").style.display = "block";
+  document.getElementById("results").style.display = "flex";
 }
 
 function downloadVideo(videoId) {
