@@ -1,83 +1,81 @@
-<!DOCTYPE html><html lang="id">
+<!DOCTYPE html>
+<html lang="id">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>YouTube WebApp</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <script src="https://kit.fontawesome.com/a2e0e6ad7f.js" crossorigin="anonymous"></script>
   <style>
-    body.dark-mode {
-      background-color: #121212;
-      color: #fff;
+    body {
+      padding-top: 70px;
     }
-    .video-card img {
-      max-height: 180px;
-      object-fit: cover;
+    .video-card {
+      margin-bottom: 20px;
+    }
+    .category-btn {
+      margin: 4px;
     }
   </style>
 </head>
-<body>
+<body data-bs-theme="light">
   <!-- Header -->
-  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+  <nav class="navbar navbar-expand-lg fixed-top navbar-dark bg-dark">
     <div class="container">
-      <a class="navbar-brand" href="#">🎥 YouTube WebApp</a>
+      <a class="navbar-brand" href="#">🎬 YouTube WebApp</a>
       <div class="d-flex">
-        <button id="toggleTheme" class="btn btn-outline-light btn-sm me-2">🌓 Mode</button>
-        <a href="https://t.me/admin" class="btn btn-outline-primary btn-sm me-2" target="_blank">
-          <i class="fab fa-telegram"></i> Admin
+        <a href="https://t.me/YourAdminUsername" target="_blank" class="btn btn-outline-light me-2">
+          <i class="bi bi-telegram"></i> Admin
         </a>
-        <a href="https://saweria.co/admin" class="btn btn-outline-success btn-sm" target="_blank">
-          <i class="fas fa-hand-holding-usd"></i> Donate
+        <a href="https://saweria.co/YourDonateLink" target="_blank" class="btn btn-outline-warning">
+          <i class="bi bi-wallet2"></i> Donate
         </a>
       </div>
     </div>
-  </nav>  <div class="container py-3">
+  </nav>
+
+  <div class="container">
     <!-- Kategori -->
-    <div class="text-center mb-3">
-      <div class="btn-group flex-wrap" role="group">
-        <button onclick="selectCategory('musik')" class="btn btn-outline-primary btn-sm">🎵 Musik</button>
-        <button onclick="selectCategory('drama korea')" class="btn btn-outline-primary btn-sm">🎬 Drama Korea</button>
-        <button onclick="selectCategory('komedi')" class="btn btn-outline-primary btn-sm">😂 Komedi</button>
-        <button onclick="selectCategory('anime')" class="btn btn-outline-primary btn-sm">🎌 Anime</button>
-        <button onclick="selectCategory('berita')" class="btn btn-outline-primary btn-sm">📰 Berita</button>
-      </div>
-    </div><!-- Iklan atas -->
-<div class="text-center mb-3">
-  <script type="text/javascript">
-    atOptions = {
-      'key' : 'ac316fe8b253dbbf12c471c0c8be41c2',
-      'format' : 'iframe',
-      'height' : 60,
-      'width' : 468,
-      'params' : {}
-    };
-  </script>
-  <script type="text/javascript" src="//www.highperformanceformat.com/ac316fe8b253dbbf12c471c0c8be41c2/invoke.js"></script>
-</div>
+    <div class="text-center my-3" id="categories"></div>
 
-<!-- Form Pencarian -->
-<div class="input-group mb-4">
-  <input type="text" id="query" class="form-control" placeholder="Cari video...">
-  <button onclick="searchVideos()" class="btn btn-danger">🔍 Cari</button>
-</div>
-
-<!-- Player Video -->
-<div id="player-container" class="mb-4" style="display:none;"></div>
-
-<!-- Iklan pemutar -->
-<div id="video-ad" class="mb-3"></div>
-
-<!-- Hasil pencarian video -->
-<div id="results" class="row row-cols-1 row-cols-md-2 g-4"></div>
-
-  </div>  <!-- Footer -->  <footer class="bg-dark text-light text-center py-3">
-    <div class="container">
-      <p class="mb-0">&copy; <span id="year"></span> YouTube WebApp - Dibuat dengan ❤️ dan Bootstrap</p>
+    <!-- Pencarian -->
+    <div class="input-group mb-4">
+      <input type="text" id="query" class="form-control" placeholder="Cari video...">
+      <button class="btn btn-danger" onclick="searchVideos()">Cari</button>
     </div>
-  </footer>  <script>
+
+    <!-- Iklan Atas -->
+    <div class="text-center mb-3" id="top-ad">
+      <script type="text/javascript">
+        atOptions = {
+          'key': 'ac316fe8b253dbbf12c471c0c8be41c2',
+          'format': 'iframe',
+          'height': 60,
+          'width': 468,
+          'params': {}
+        };
+      </script>
+      <script type="text/javascript" src="//www.highperformanceformat.com/ac316fe8b253dbbf12c471c0c8be41c2/invoke.js"></script>
+    </div>
+
+    <!-- Hasil Pencarian -->
+    <div id="results" class="row"></div>
+
+    <!-- Pemutar Video -->
+    <div id="player-container" class="my-4" style="display:none;"></div>
+    <div id="video-ad" class="mb-4 text-center"></div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="bg-dark text-light text-center py-3 mt-5">
+    <div>© <span id="year"></span> YouTube WebApp. All rights reserved.</div>
+  </footer>
+
+  <!-- Bootstrap & Icons -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+  <script src="script.js"></script>
+  <script>
     document.getElementById("year").textContent = new Date().getFullYear();
-    document.getElementById("toggleTheme").onclick = () => {
-      document.body.classList.toggle("dark-mode");
-    };
-  </script>  <script src="script.js"></script></body>
-          </html>
+  </script>
+</body>
+</html>
