@@ -8,8 +8,16 @@
   <link rel="stylesheet" href="style.css" />
 </head>
   <script>
-  document.getElementById("year").textContent = new Date().getFullYear();
-  </script>
+  // Pastikan DOM sudah dimuat
+  window.onload = () => {
+    const yearSpan = document.getElementById("year");
+    if (yearSpan) {
+      yearSpan.textContent = new Date().getFullYear();
+    }
+  };
+</script>
+</body>
+</html>
 <body>
 
   <!-- Header -->
