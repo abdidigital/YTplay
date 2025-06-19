@@ -1,5 +1,21 @@
+// --- Inisialisasi Global ---
+let player; // Variabel untuk menampung objek YouTube Player
+let adTimer; // Timer untuk iklan
+let countdownInterval; // Interval untuk hitung mundur iklan
+
+// Muat YouTube Iframe API secara asynchronous
+const tag = document.createElement('script');
+tag.src = "https://www.youtube.com/iframe_api";
+const firstScriptTag = document.getElementsByTagName('script')[0];
+firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+// Fungsi ini akan dipanggil oleh API YouTube setelah selesai dimuat
+function onYouTubeIframeAPIReady() {
+    console.log("YouTube API Siap.");
+    // Player akan diinisialisasi saat video pertama kali diputar
+}
+
 document.addEventListener('DOMContentLoaded', function () {
-    // Inisialisasi
     const tg = window.Telegram.WebApp;
     tg.ready();
     const YOUTUBE_API_KEY = 'AIzaSyBXEhmJ_a91vXpSiSnkRpi6_WbVTL2Vz0A';
@@ -12,11 +28,107 @@ document.addEventListener('DOMContentLoaded', function () {
     const categoryButtons = document.getElementById('categoryButtons');
     const videoModalEl = document.getElementById('videoModal');
     const videoModal = new bootstrap.Modal(videoModalEl);
-    const youtubePlayer = document.getElementById('youtubePlayer');
     const videoModalLabel = document.getElementById('videoModalLabel');
     const relatedVideosContainer = document.getElementById('relatedVideosContainer');
+    const adOverlay = document.getElementById('adOverlay');
+    const adCountdown = document.getElementById('adCountdown');
+    const skipAdButton = document.getElementById('skipAdButton');
+
+    // Fungsi ini dipanggil saat status player berubah (misal: selesai, play, pause)
+    function onPlayerStateChange(event) {
+        // Jika video telah selesai (YT.PlayerState.ENDED nilainya 0)
+        if (event.data === YT.PlayerState.ENDED) {
+            console.log("Video selesai, memutar selanjutnya...");
+            const nextVideoElement = relatedVideosContainer.querySelector('.related-video-item');
+            if (nextVideoElement) {
+                const nextVideoId = nextVideoElement.dataset.videoId;
+                const nextVideoTitle = nextVideoElement.dataset.videoTitle;
+                playVideo(nextVideoId, nextVideoTitle); // Panggil fungsi playVideo untuk video selanjutnya
+            } else {
+                console.log("Tidak ada video selanjutnya untuk diputar.");
+            }
+        }
+    }
+
+    // Fungsi untuk memulai pemutaran video SETELAH iklan selesai/dilewati
+    function startVideoPlayback(videoId, title) {
+        adOverlay.style.display = 'none';
+        clearTimeout(adTimer);
+        clearInterval(countdownInterval);
+
+        videoModalLabel.textContent = decodeURIComponent(title);
+
+        if (player) {
+            // Jika player sudah ada, cukup muat video baru
+            player.loadVideoById(videoId);
+        } else {
+            // Jika player belum ada, buat player baru
+            player = new YT.Player('youtubePlayer', {
+                height: '100%',
+                width: '100%',
+                videoId: videoId,
+                playerVars: {
+                    'playsinline': 1,
+                    'autoplay': 1,
+                    'controls': 1,
+                    'rel': 0
+                },
+                events: {
+                    'onStateChange': onPlayerStateChange
+                }
+            });
+        }
+    }
     
-    // --- FUNGSI-FUNGSI API ---
+    // Fungsi untuk menampilkan iklan Pre-roll
+    function showPreRollAd(videoId, title) {
+        adOverlay.style.display = 'flex';
+        let countdown = 5;
+        adCountdown.textContent = `Video akan diputar dalam ${countdown} detik`;
+        
+        // Hapus listener lama jika ada untuk mencegah duplikasi
+        const newSkipButton = skipAdButton.cloneNode(true);
+        skipAdButton.parentNode.replaceChild(newSkipButton, skipAdButton);
+        
+        newSkipButton.onclick = () => {
+            console.log("Iklan dilewati.");
+            startVideoPlayback(videoId, title);
+        };
+
+        countdownInterval = setInterval(() => {
+            countdown--;
+            adCountdown.textContent = `Video akan diputar dalam ${countdown} detik`;
+        }, 1000);
+
+        adTimer = setTimeout(() => {
+            console.log("Waktu iklan habis.");
+            startVideoPlayback(videoId, title);
+        }, 5000);
+    }
+    
+    // Fungsi utama yang dipanggil saat video diklik
+    function playVideo(videoId, encodedTitle) {
+        showPreRollAd(videoId, encodedTitle);
+        fetchRelatedVideos(videoId);
+        if (!videoModalEl.classList.contains('show')) {
+            videoModal.show();
+        }
+    }
+
+    // Saat modal ditutup, hancurkan player untuk menghentikan video
+    videoModalEl.addEventListener('hidden.bs.modal', () => {
+        if (player) {
+            player.stopVideo();
+            // Optional: hancurkan objek player jika tidak ingin state tersimpan
+            // player.destroy(); 
+            // player = null;
+        }
+        relatedVideosContainer.innerHTML = '';
+        clearTimeout(adTimer);
+        clearInterval(countdownInterval);
+    });
+
+    // --- Sisa fungsi (Fetch API, dll) tetap sama seperti sebelumnya ---
 
     const displayResults = (videos) => {
         resultsContainer.innerHTML = '';
@@ -29,15 +141,9 @@ document.addEventListener('DOMContentLoaded', function () {
             const snippet = video.snippet;
             const videoElement = `
                 <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
-                    <div class="card video-card h-100 shadow-sm" 
-                         data-video-id="${videoId}" 
-                         data-video-title="${encodeURIComponent(snippet.title)}" 
-                         style="cursor: pointer;">
+                    <div class="card video-card h-100 shadow-sm" data-video-id="${videoId}" data-video-title="${encodeURIComponent(snippet.title)}" style="cursor: pointer;">
                         <img src="${snippet.thumbnails.high.url}" class="card-img-top" alt="Thumbnail">
-                        <div class="card-body d-flex flex-column">
-                            <h5 class="card-title text-dark">${snippet.title}</h5>
-                            <p class="card-text mt-auto"><i class="bi bi-person-video"></i> ${snippet.channelTitle}</p>
-                        </div>
+                        <div class="card-body d-flex flex-column"><h5 class="card-title text-dark">${snippet.title}</h5><p class="card-text mt-auto"><i class="bi bi-person-video"></i> ${snippet.channelTitle}</p></div>
                     </div>
                 </div>`;
             resultsContainer.innerHTML += videoElement;
@@ -49,7 +155,6 @@ document.addEventListener('DOMContentLoaded', function () {
         const allParams = { ...defaultParams, ...params };
         const query = new URLSearchParams(allParams).toString();
         const url = `https://www.googleapis.com/youtube/v3/${endpoint}?${query}`;
-        
         const response = await fetch(url);
         if (!response.ok) {
             const errorData = await response.json();
@@ -64,9 +169,7 @@ document.addEventListener('DOMContentLoaded', function () {
         loadingSpinner.classList.remove('d-none');
         resultsContainer.innerHTML = '';
         try {
-            const data = await fetchFromYouTube('search', {
-                part: 'snippet', q: query, maxResults: 12, type: 'video'
-            });
+            const data = await fetchFromYouTube('search', { part: 'snippet', q: query, maxResults: 12, type: 'video' });
             if (data) displayResults(data.items);
         } catch (error) {
             resultsContainer.innerHTML = `<div class="alert alert-danger" role="alert"><strong>Gagal mencari video:</strong> ${error.message}</div>`;
@@ -80,9 +183,7 @@ document.addEventListener('DOMContentLoaded', function () {
         resultsContainer.innerHTML = '';
         try {
             let params = { part: 'snippet', chart: 'mostPopular', maxResults: 12, regionCode: 'ID' };
-            if (categoryId) {
-                params.videoCategoryId = categoryId;
-            }
+            if (categoryId) params.videoCategoryId = categoryId;
             const data = await fetchFromYouTube('videos', params);
             if (data) displayResults(data.items);
         } catch (error) {
@@ -92,49 +193,20 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     };
 
-    // --- PERBAIKAN FINAL: LOGIKA BARU UNTUK VIDEO TERKAIT ---
     const fetchRelatedVideos = async (videoId) => {
         relatedVideosContainer.innerHTML = '<div class="text-center"><div class="spinner-border spinner-border-sm" role="status"></div></div>';
         try {
-            // Langkah 1: Dapatkan judul dari video yang sedang diputar
-            const videoDetailsData = await fetchFromYouTube('videos', {
-                part: 'snippet',
-                id: videoId
-            });
-
-            if (!videoDetailsData.items || videoDetailsData.items.length === 0) {
-                throw new Error("Detail video tidak ditemukan.");
-            }
+            const videoDetailsData = await fetchFromYouTube('videos', { part: 'snippet', id: videoId });
+            if (!videoDetailsData.items || videoDetailsData.items.length === 0) throw new Error("Detail video tidak ditemukan.");
             const originalVideoTitle = videoDetailsData.items[0].snippet.title;
-
-            // Langkah 2: Lakukan pencarian baru menggunakan judul tersebut sebagai query
-            const searchData = await fetchFromYouTube('search', {
-                part: 'snippet',
-                q: originalVideoTitle, // Menggunakan judul sebagai kata kunci pencarian
-                maxResults: 6, // Ambil 6 untuk cadangan jika video asli muncul
-                type: 'video'
-            });
-            
-            // Langkah 3: Filter hasilnya untuk menghapus video asli & tampilkan
+            const searchData = await fetchFromYouTube('search', { part: 'snippet', q: originalVideoTitle, maxResults: 6, type: 'video' });
             if (searchData && searchData.items) {
-                const relatedItems = searchData.items
-                    .filter(item => item.id.videoId !== videoId) // Hapus video yang sedang diputar dari hasil
-                    .slice(0, 5); // Ambil 5 teratas
-
+                const relatedItems = searchData.items.filter(item => item.id.videoId !== videoId).slice(0, 5);
                 if (relatedItems.length > 0) {
-                    relatedVideosContainer.innerHTML = ''; // Kosongkan spinner
+                    relatedVideosContainer.innerHTML = '';
                     relatedItems.forEach(video => {
                         const snippet = video.snippet;
-                        const relatedElement = `
-                            <div class="related-video-item" 
-                                 data-video-id="${video.id.videoId}" 
-                                 data-video-title="${encodeURIComponent(snippet.title)}">
-                                <img src="${snippet.thumbnails.default.url}" alt="Thumbnail">
-                                <div class="related-video-item-info">
-                                    <h6 class="text-dark">${snippet.title}</h6>
-                                    <p>${snippet.channelTitle}</p>
-                                </div>
-                            </div>`;
+                        const relatedElement = `<div class="related-video-item" data-video-id="${video.id.videoId}" data-video-title="${encodeURIComponent(snippet.title)}"><img src="${snippet.thumbnails.default.url}" alt="Thumbnail"><div class="related-video-item-info"><h6 class="text-dark">${snippet.title}</h6><p>${snippet.channelTitle}</p></div></div>`;
                         relatedVideosContainer.innerHTML += relatedElement;
                     });
                 } else {
@@ -143,58 +215,21 @@ document.addEventListener('DOMContentLoaded', function () {
             } else {
                  relatedVideosContainer.innerHTML = '<p class="text-muted text-center small">Tidak ada video terkait.</p>';
             }
-
         } catch (error) {
             relatedVideosContainer.innerHTML = `<p class="text-danger text-center small">Gagal memuat video terkait: ${error.message}</p>`;
         }
     };
-    
-    const playVideo = (videoId, encodedTitle) => {
-        const title = decodeURIComponent(encodedTitle);
-        videoModalLabel.textContent = title;
-        youtubePlayer.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`;
-        fetchRelatedVideos(videoId);
-        if (!videoModalEl.classList.contains('show')) {
-            videoModal.show();
-        }
-    };
-
-    // --- EVENT LISTENERS (Tidak ada perubahan di sini) ---
-    searchButton.addEventListener('click', () => searchVideos(searchInput.value));
-    searchInput.addEventListener('keypress', e => e.key === 'Enter' && searchVideos(searchInput.value));
-
-    categoryButtons.addEventListener('click', e => {
-        const button = e.target.closest('button');
-        if (!button) return;
-        categoryButtons.querySelector('.active').classList.remove('active');
-        button.classList.add('active');
-        const type = button.dataset.type;
-        if (type === 'trending') {
-            fetchVideosByCategory();
-        } else if (type === 'category') {
-            fetchVideosByCategory(button.dataset.categoryId);
-        }
-    });
 
     resultsContainer.addEventListener('click', e => {
         const card = e.target.closest('.video-card');
-        if (card) {
-            playVideo(card.dataset.videoId, card.dataset.videoTitle);
-        }
+        if (card) playVideo(card.dataset.videoId, card.dataset.videoTitle);
     });
 
     relatedVideosContainer.addEventListener('click', e => {
         const item = e.target.closest('.related-video-item');
-        if (item) {
-            playVideo(item.dataset.videoId, item.dataset.videoTitle);
-        }
+        if (item) playVideo(item.dataset.videoId, item.dataset.videoTitle);
     });
-
-    videoModalEl.addEventListener('hidden.bs.modal', () => {
-        youtubePlayer.src = '';
-        relatedVideosContainer.innerHTML = '';
-    });
-
-    // --- PEMUATAN AWAL ---
+    
+    // Panggil fetchVideosByCategory saat halaman pertama kali dimuat
     fetchVideosByCategory();
 });
