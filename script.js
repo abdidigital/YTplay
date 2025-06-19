@@ -1,18 +1,5 @@
 const apiKey = "AIzaSyCFMAiplOEzTreGfkKpQT4f6blI-bfcoYk";
-
-const defaultQueries = [
-  "musik", "drama korea", "komedi", "gameplay", "trending",
-  "movie trailer", "dangdut", "news", "anime", "vlog"
-];
-
-function getRandomQuery() {
-  return defaultQueries[Math.floor(Math.random() * defaultQueries.length)];
-}
-
-window.onload = () => {
-  document.getElementById("query").value = getRandomQuery();
-  searchVideos();
-};
+let latestVideos = []; // Simpan hasil pencarian terakhir
 
 async function searchVideos() {
   const query = document.getElementById("query").value.trim();
@@ -33,7 +20,6 @@ async function searchVideos() {
   const res = await fetch(
     `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=10&q=${encodeURIComponent(query)}&key=${apiKey}&type=video`
   );
-
   const data = await res.json();
   resultsContainer.innerHTML = "";
 
@@ -42,12 +28,14 @@ async function searchVideos() {
     return;
   }
 
+  latestVideos = data.items; // Simpan hasil pencarian
+
   data.items.forEach(video => {
     const { videoId } = video.id;
     const { title, thumbnails } = video.snippet;
 
     const col = document.createElement("div");
-    col.className = "col";
+    col.className = "col-md-6 col-lg-6 mb-4";
 
     const card = document.createElement("div");
     card.className = "card h-100 video-card";
@@ -59,41 +47,53 @@ async function searchVideos() {
         <button class="btn btn-sm btn-secondary" onclick="downloadVideo('${videoId}')">⬇️ Download</button>
       </div>
     `;
-
     col.appendChild(card);
     resultsContainer.appendChild(col);
   });
 }
-function setCategory(category) {
-  document.getElementById("query").value = category;
-  searchVideos();
-}
+
 function playVideo(videoId) {
   const playerContainer = document.getElementById("player-container");
   const resultsContainer = document.getElementById("results");
   const videoAd = document.getElementById("video-ad");
+  const relatedList = document.getElementById("related-list");
 
   resultsContainer.style.display = "none";
   playerContainer.style.display = "block";
 
-  playerContainer.innerHTML = `
-    <div class="ratio ratio-16x9">
-      <iframe src="https://www.youtube.com/embed/${videoId}?autoplay=1&playlist=${videoId}&loop=1"
-        frameborder="0" allowfullscreen allow="autoplay; encrypted-media">
-      </iframe>
-    </div>
-    <div class="text-center mt-3">
-      <button class="btn btn-secondary" onclick="backToResults()">🔙 Kembali ke Hasil</button>
-    </div>
+  playerContainer.querySelector(".ratio")?.remove(); // hapus player lama
+  const iframe = document.createElement("div");
+  iframe.className = "ratio ratio-16x9";
+  iframe.innerHTML = `
+    <iframe src="https://www.youtube.com/embed/${videoId}?autoplay=1&playlist=${videoId}&loop=1" frameborder="0" allowfullscreen allow="autoplay; encrypted-media"></iframe>
+  `;
+  playerContainer.prepend(iframe);
+
+  videoAd.innerHTML = `
+    <script async="async" data-cfasync="false" src="//pl26955455.profitableratecpm.com/e3b9b0e9cdd83dea5f5d3e2b633ff801/invoke.js"></script>
+    <div id="container-e3b9b0e9cdd83dea5f5d3e2b633ff801"></div>
   `;
 
-  // Tambahkan slot iklan menggunakan elemen script
-  videoAd.innerHTML = '<div id="container-e3b9b0e9cdd83dea5f5d3e2b633ff801"></div>';
-  const adScript = document.createElement("script");
-  adScript.async = true;
-  adScript.setAttribute("data-cfasync", "false");
-  adScript.src = "//pl26955455.profitableratecpm.com/e3b9b0e9cdd83dea5f5d3e2b633ff801/invoke.js";
-  document.getElementById("video-ad").appendChild(adScript);
+  // Tampilkan 4 video selain yang sedang diputar
+  relatedList.innerHTML = "";
+  latestVideos
+    .filter(v => v.id.videoId !== videoId)
+    .slice(0, 4)
+    .forEach(video => {
+      const { videoId: vid, snippet } = video;
+      const div = document.createElement("div");
+      div.className = "col-md-6 mb-3";
+      div.innerHTML = `
+        <div class="card h-100">
+          <img src="${snippet.thumbnails.medium.url}" class="card-img-top" alt="${snippet.title}">
+          <div class="card-body">
+            <h6 class="card-title">${snippet.title}</h6>
+            <button class="btn btn-sm btn-danger" onclick="playVideo('${vid}')">▶️ Putar</button>
+          </div>
+        </div>
+      `;
+      relatedList.appendChild(div);
+    });
 }
 
 function backToResults() {
@@ -105,4 +105,4 @@ function backToResults() {
 function downloadVideo(videoId) {
   const url = `https://www.y2mate.com/youtube/${videoId}`;
   window.open(url, "_blank");
-    }
+}
