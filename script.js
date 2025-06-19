@@ -1,4 +1,5 @@
 const apiKey = "AIzaSyCFMAiplOEzTreGfkKpQT4f6blI-bfcoYk";
+let currentPlaylist = [];
 
 async function searchVideos() {
   const query = document.getElementById("query").value.trim();
@@ -24,10 +25,13 @@ async function searchVideos() {
     );
     const data = await res.json();
 
-    if (!data.items) {
-      resultsContainer.innerHTML = `<p class="text-danger">Gagal mengambil data.</p>`;
+    if (!data.items || data.items.length === 0) {
+      resultsContainer.innerHTML = `<p class="text-danger">Tidak ditemukan video.</p>`;
       return;
     }
+
+    // Simpan playlist videoId
+    currentPlaylist = data.items.map(item => item.id.videoId);
 
     resultsContainer.innerHTML = '';
     data.items.forEach(video => {
@@ -58,60 +62,25 @@ async function searchVideos() {
   }
 }
 
-async function playVideo(videoId) {
+function playVideo(videoId) {
   const playerContainer = document.getElementById("player-container");
   const resultsContainer = document.getElementById("results");
+
+  // Buat playlist kecuali video yang sedang diputar
+  const playlist = currentPlaylist.filter(id => id !== videoId);
+  const playlistParam = playlist.join(",");
 
   playerContainer.style.display = "block";
   resultsContainer.style.display = "none";
 
   playerContainer.innerHTML = `
     <div class="ratio ratio-16x9 mb-3">
-      <iframe src="https://www.youtube.com/embed/${videoId}?autoplay=1" allowfullscreen allow="autoplay; encrypted-media"></iframe>
+      <iframe 
+        src="https://www.youtube.com/embed/${videoId}?autoplay=1&playlist=${playlistParam}" 
+        allowfullscreen allow="autoplay; encrypted-media" frameborder="0"></iframe>
     </div>
     <button class="btn btn-secondary mb-3" onclick="backToResults()">🔙 Kembali ke Hasil</button>
-    <h5>🎞️ Video Terkait</h5>
-    <div id="related-videos" class="row g-3"></div>
   `;
-
-  try {
-    const res = await fetch(
-      `https://www.googleapis.com/youtube/v3/search?relatedToVideoId=${videoId}&type=video&part=snippet&maxResults=6&key=${apiKey}`
-    );
-    const data = await res.json();
-
-    const relatedContainer = document.getElementById("related-videos");
-
-    if (data.items) {
-      data.items.forEach(video => {
-        const { videoId } = video.id;
-        const { title, thumbnails } = video.snippet;
-
-        const col = document.createElement("div");
-        col.className = "col-6";
-
-        col.innerHTML = `
-          <div class="card h-100 shadow-sm">
-            <img src="${thumbnails.medium.url}" class="card-img-top" alt="${title}">
-            <div class="card-body p-2">
-              <h6 class="card-title" style="font-size:14px;">${title}</h6>
-              <div class="d-grid gap-2">
-                <button class="btn btn-sm btn-primary" onclick="playVideo('${videoId}')">▶️ Putar</button>
-                <button class="btn btn-sm btn-outline-secondary" onclick="downloadVideo('${videoId}')">⬇️ Download</button>
-              </div>
-            </div>
-          </div>
-        `;
-
-        relatedContainer.appendChild(col);
-      });
-    } else {
-      relatedContainer.innerHTML = `<p class="text-danger">Tidak ada video terkait.</p>`;
-    }
-  } catch (err) {
-    console.error(err);
-    document.getElementById("related-videos").innerHTML = `<p class="text-danger">Gagal memuat video terkait.</p>`;
-  }
 }
 
 function backToResults() {
