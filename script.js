@@ -1,4 +1,4 @@
-// YouTube API Key (Pastikan ini aman dalam produksi, ini hanya untuk contoh)
+// YouTube API Key (Untuk tujuan demo. Dalam produksi, pertimbangkan untuk menyimpannya dengan lebih aman)
 // Pastikan API key ini sudah diaktifkan untuk YouTube Data API v3 di Google Cloud Console Anda.
 const YOUTUBE_API_KEY = 'AIzaSyCFMAiplOEzTreGfkKpQT4f6blI-bfcoYk';
 const BASE_URL = 'https://www.googleapis.com/youtube/v3/';
@@ -40,21 +40,32 @@ function showMessage(message, type = 'info') {
  * @returns {Promise<Object|null>} Data respons API atau null jika terjadi kesalahan.
  */
 async function fetchVideos(query, videoId = null, pageToken = '') {
-    // Tampilkan pesan loading
-    loadingMessage.classList.remove('hidden');
+    // Sembunyikan pesan 'tidak ada hasil' dan tampilkan 'memuat'
     noResultsMessage.classList.add('hidden');
+    loadingMessage.classList.remove('hidden');
     searchResultsDiv.classList.remove('grid'); // Sembunyikan tata letak grid sementara memuat
     // Ganti konten hasil pencarian dengan pesan loading baru setiap kali fungsi ini dipanggil
     searchResultsDiv.innerHTML = '<div class="text-center text-gray-500 p-8" id="loadingMessage">Memuat video...</div>';
 
-
     let url = '';
     if (videoId) {
-        // Mengambil video terkait
+        // Validasi untuk permintaan video terkait
+        if (!videoId || typeof videoId !== 'string') {
+            console.error('Error Internal: ID Video tidak valid untuk permintaan video terkait.');
+            loadingMessage.classList.add('hidden');
+            showMessage('Error Internal: ID Video tidak valid.', 'error');
+            return null;
+        }
         url = `${BASE_URL}search?part=snippet&type=video&relatedToVideoId=${videoId}&maxResults=10&key=${YOUTUBE_API_KEY}`;
     } else {
-        // Melakukan pencarian umum
-        url = `${BASE_URL}search?part=snippet&type=video&q=${encodeURIComponent(query)}&maxResults=10&key=${YOUTUBE_API_KEY}`;
+        // Validasi untuk permintaan pencarian umum
+        if (!query || typeof query !== 'string' || query.trim() === '') {
+            console.error('Error Internal: Kueri pencarian kosong atau tidak valid.');
+            loadingMessage.classList.add('hidden');
+            showMessage('Error Internal: Kueri pencarian kosong atau tidak valid.', 'error');
+            return null;
+        }
+        url = `${BASE_URL}search?part=snippet&type=video&q=${encodeURIComponent(query.trim())}&maxResults=10&key=${YOUTUBE_API_KEY}`;
     }
 
     if (pageToken) {
@@ -103,6 +114,11 @@ function renderVideos(videos, container, clear = true) {
         container.innerHTML = ''; // Hapus hasil sebelumnya
     }
 
+    if (!videos || !Array.isArray(videos) || videos.length === 0) {
+        // console.warn('Tidak ada video untuk dirender atau argumen tidak valid.');
+        return; // Tidak melakukan apa-apa jika tidak ada video
+    }
+
     videos.forEach(video => {
         // Memastikan item video dan snippet ada
         if (!video || !video.snippet || !video.id || !video.id.videoId) {
@@ -141,6 +157,18 @@ function renderVideos(videos, container, clear = true) {
  * @param {string} pageToken - Token halaman untuk pagination.
  */
 async function performSearch(query, pageToken = '') {
+    // Validasi kueri sebelum memanggil fetchVideos
+    if (!query || query.trim() === '') {
+        showMessage('Kueri pencarian tidak boleh kosong.', 'info');
+        // Sembunyikan pesan loading dan tampilkan "Tidak ada hasil" jika kueri kosong
+        loadingMessage.classList.add('hidden');
+        noResultsMessage.classList.remove('hidden');
+        noResultsMessage.textContent = 'Tidak ada hasil ditemukan.';
+        searchResultsDiv.innerHTML = ''; // Kosongkan hasil sebelumnya
+        relatedVideosSection.classList.add('hidden'); // Sembunyikan bagian video terkait
+        return;
+    }
+
     const data = await fetchVideos(query, null, pageToken);
     if (data && data.items) {
         if (pageToken) {
@@ -162,6 +190,13 @@ async function performSearch(query, pageToken = '') {
             // Jika tidak ada hasil untuk pencarian awal, sembunyikan bagian terkait
             relatedVideosSection.classList.add('hidden');
         }
+    } else {
+        // Jika data tidak ada atau tidak ada item, pastikan pesan "Tidak ada hasil" terlihat
+        loadingMessage.classList.add('hidden');
+        noResultsMessage.classList.remove('hidden');
+        noResultsMessage.textContent = 'Tidak ada hasil ditemukan.';
+        searchResultsDiv.innerHTML = ''; // Kosongkan hasil sebelumnya
+        relatedVideosSection.classList.add('hidden'); // Sembunyikan bagian video terkait
     }
 }
 
@@ -170,6 +205,13 @@ async function performSearch(query, pageToken = '') {
  * @param {string} videoId - ID video untuk menemukan video terkait.
  */
 async function fetchRelatedVideos(videoId) {
+    // Validasi videoId sebelum memanggil fetchVideos
+    if (!videoId || typeof videoId !== 'string' || videoId.trim() === '') {
+        console.warn('ID Video tidak valid untuk mencari video terkait.');
+        relatedVideosSection.classList.add('hidden');
+        return;
+    }
+
     const data = await fetchVideos(null, videoId);
     if (data && data.items) {
         if (data.items.length > 0) {
@@ -201,6 +243,7 @@ function getRandomQuery() {
 searchForm.addEventListener('submit', async (e) => {
     e.preventDefault(); // Mencegah refresh halaman
     const query = searchInput.value.trim();
+    // Validasi di sini sebelum memanggil performSearch
     if (query) {
         currentSearchQuery = query;
         nextPageToken = ''; // Reset pagination
@@ -208,6 +251,12 @@ searchForm.addEventListener('submit', async (e) => {
         await performSearch(query);
     } else {
         showMessage('Harap masukkan kata kunci pencarian.', 'info');
+        // Handle UI state jika input kosong
+        loadingMessage.classList.add('hidden');
+        noResultsMessage.classList.remove('hidden');
+        noResultsMessage.textContent = 'Silakan masukkan kueri pencarian.';
+        searchResultsDiv.innerHTML = '';
+        relatedVideosSection.classList.add('hidden');
     }
 });
 
@@ -227,6 +276,8 @@ categoryButtonsDiv.addEventListener('click', async (e) => {
 loadMoreBtn.addEventListener('click', () => {
     if (nextPageToken && currentSearchQuery) {
         performSearch(currentSearchQuery, nextPageToken);
+    } else {
+        showMessage('Tidak ada lebih banyak video untuk dimuat.', 'info');
     }
 });
 
@@ -237,4 +288,4 @@ document.addEventListener('DOMContentLoaded', () => {
     currentSearchQuery = initialQuery; // Simpan kueri awal
     performSearch(initialQuery); // Lakukan pencarian awal
 });
-                   
+                                       
