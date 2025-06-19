@@ -9,7 +9,6 @@ async function searchVideos() {
   playerContainer.style.display = "none";
   document.getElementById("ad-player").style.display = "none";
   resultsContainer.innerHTML = "Loading...";
-  resultsContainer.style.display = "flex";
 
   if (!query) {
     resultsContainer.innerHTML = "Ketik kata kunci pencarian.";
@@ -28,39 +27,34 @@ async function searchVideos() {
   }
 
   currentPlaylist = data.items.map(video => video.id.videoId);
-
   resultsContainer.innerHTML = "";
+
   data.items.forEach((video, index) => {
     const { videoId } = video.id;
     const { title, thumbnails } = video.snippet;
 
-    const col = document.createElement("div");
-    col.className = "col-6";
-
-    col.innerHTML = `
-      <div class="card h-100 shadow-sm">
-        <img src="${thumbnails.medium.url}" class="card-img-top" alt="${title}">
-        <div class="card-body p-2">
-          <h6 class="card-title" style="font-size:14px;">${title}</h6>
-          <div class="d-grid gap-2">
-            <button class="btn btn-sm btn-primary" onclick="playVideo('${videoId}')">▶️ Putar</button>
-            <button class="btn btn-sm btn-outline-secondary" onclick="downloadVideo('${videoId}')">⬇️ Download</button>
-          </div>
-        </div>
+    const card = document.createElement("div");
+    card.className = "video-card";
+    card.innerHTML = `
+      <img src="${thumbnails.medium.url}" alt="${title}" />
+      <h6>${title}</h6>
+      <div class="btn-group">
+        <button class="btn btn-sm btn-primary" onclick="playVideo('${videoId}')">▶️ Putar</button>
+        <button class="btn btn-sm btn-outline-secondary" onclick="downloadVideo('${videoId}')">⬇️ Download</button>
       </div>
     `;
 
-    resultsContainer.appendChild(col);
+    resultsContainer.appendChild(card);
 
-    // Tambahkan iklan setelah video ke-4 (index 3)
+    // Iklan disisipkan setelah video ke-4
     if (index === 3) {
-      const adCol = document.createElement("div");
-      adCol.className = "col-12 text-center";
-      adCol.innerHTML = `
+      const adDiv = document.createElement("div");
+      adDiv.className = "text-center my-3";
+      adDiv.innerHTML = `
         <script async="async" data-cfasync="false" src="//pl26955455.profitableratecpm.com/e3b9b0e9cdd83dea5f5d3e2b633ff801/invoke.js"></script>
         <div id="container-e3b9b0e9cdd83dea5f5d3e2b633ff801"></div>
       `;
-      resultsContainer.appendChild(adCol);
+      resultsContainer.appendChild(adDiv);
     }
   });
 }
@@ -68,13 +62,10 @@ async function searchVideos() {
 function playVideo(videoId) {
   const playerContainer = document.getElementById("player-container");
   const resultsContainer = document.getElementById("results");
+  const adPlayer = document.getElementById("ad-player");
 
   const playlist = currentPlaylist.filter(id => id !== videoId);
   const playlistParam = playlist.join(",");
-
-  playerContainer.style.display = "block";
-  resultsContainer.style.display = "none";
-  document.getElementById("ad-player").style.display = "block";
 
   playerContainer.innerHTML = `
     <div class="ratio ratio-16x9 mb-3">
@@ -85,12 +76,16 @@ function playVideo(videoId) {
     </div>
     <button class="btn btn-secondary mb-3" onclick="backToResults()">🔙 Kembali ke Hasil</button>
   `;
+
+  playerContainer.style.display = "block";
+  resultsContainer.style.display = "none";
+  adPlayer.style.display = "block";
 }
 
 function backToResults() {
   document.getElementById("player-container").style.display = "none";
   document.getElementById("ad-player").style.display = "none";
-  document.getElementById("results").style.display = "flex";
+  document.getElementById("results").style.display = "grid";
 }
 
 function downloadVideo(videoId) {
