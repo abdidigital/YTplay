@@ -18,9 +18,14 @@ document.addEventListener('DOMContentLoaded', function () {
     const youtubePlayer = document.getElementById('youtubePlayer');
     const videoModalLabel = document.getElementById('videoModalLabel');
 
-    // Fungsi untuk melakukan pencarian
-    const performSearch = async () => {
-        const query = searchInput.value.trim();
+    /**
+     * Fungsi utama untuk melakukan pencarian video di YouTube.
+     * @param {string} [searchQuery] - Kata kunci pencarian. Jika tidak disediakan, akan mengambil dari input field.
+     */
+    const performSearch = async (searchQuery) => {
+        // Tentukan query: gunakan searchQuery jika ada, jika tidak, ambil dari input.
+        const query = searchQuery || searchInput.value.trim();
+        
         if (!query) {
             resultsContainer.innerHTML = '<div class="col-12 text-center"><p class="text-muted">Silakan masukkan kata kunci pencarian.</p></div>';
             return;
@@ -66,7 +71,6 @@ document.addEventListener('DOMContentLoaded', function () {
             const channelTitle = video.snippet.channelTitle;
             const thumbnailUrl = video.snippet.thumbnails.high.url;
 
-            // Perhatikan: tag <a> dihapus, diganti dengan data-* attribute dan class
             const videoElement = `
                 <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
                     <div class="card video-card h-100 shadow-sm" 
@@ -92,7 +96,6 @@ document.addEventListener('DOMContentLoaded', function () {
             const videoId = card.dataset.videoId;
             const videoTitle = decodeURIComponent(card.dataset.videoTitle);
             
-            // Atur judul modal dan sumber video, lalu tampilkan modal
             videoModalLabel.textContent = videoTitle;
             youtubePlayer.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`;
             videoModal.show();
@@ -101,11 +104,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Event listener untuk menghentikan video saat modal ditutup
     videoModalEl.addEventListener('hidden.bs.modal', () => {
-        youtubePlayer.src = ''; // Hentikan pemutaran video
+        youtubePlayer.src = '';
     });
     
-    // Tambahkan event listener untuk tombol dan input
-    searchButton.addEventListener('click', performSearch);
+    // Event listener untuk tombol cari (memanggil performSearch tanpa argumen)
+    searchButton.addEventListener('click', () => performSearch());
+    
+    // Event listener untuk input (Enter)
     searchInput.addEventListener('keypress', (event) => {
         if (event.key === 'Enter') {
             performSearch();
@@ -115,4 +120,9 @@ document.addEventListener('DOMContentLoaded', function () {
     // Memberikan warna tema dari Telegram ke UI
     document.documentElement.style.setProperty('--tg-theme-bg-color', tg.backgroundColor);
     document.documentElement.style.setProperty('--tg-theme-text-color', tg.textColor);
+
+    // --- PERUBAHAN UTAMA: MUAT VIDEO DEFAULT SAAT WEBAPP DIBUKA ---
+    // Anda bisa mengganti "Trending Indonesia 2025" dengan kata kunci lain
+    performSearch('Lagu Terbaru Indonesia 2025');
+
 });
