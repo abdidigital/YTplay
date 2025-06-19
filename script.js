@@ -32,9 +32,8 @@ async function searchVideos() {
   data.items.forEach((video, index) => {
     const { videoId } = video.id;
     const { title, thumbnails } = video.snippet;
-
     const card = document.createElement("div");
-    card.className = "video-card";
+    card.className = "col";
     card.innerHTML = `
       <img src="${thumbnails.medium.url}" alt="${title}" />
       <h6>${title}</h6>
