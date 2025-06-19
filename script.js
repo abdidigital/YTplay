@@ -3,6 +3,9 @@ const apiKey = "AIzaSyCFMAiplOEzTreGfkKpQT4f6blI-bfcoYk";
 async function searchVideos() {
   const query = document.getElementById("query").value.trim();
   const resultsContainer = document.getElementById("results");
+  const playerContainer = document.getElementById("player-container");
+
+  playerContainer.style.display = "none";
   resultsContainer.innerHTML = "Loading...";
 
   if (!query) {
@@ -17,7 +20,7 @@ async function searchVideos() {
   const data = await res.json();
 
   if (!data.items) {
-    resultsContainer.innerHTML = "Gagal mengambil data dari YouTube API.";
+    resultsContainer.innerHTML = "Gagal mengambil data.";
     return;
   }
 
@@ -39,11 +42,26 @@ async function searchVideos() {
 }
 
 function playVideo(videoId) {
-  const url = `https://www.youtube.com/watch?v=${videoId}`;
-  window.open(url, "_blank");
+  const playerContainer = document.getElementById("player-container");
+  const resultsContainer = document.getElementById("results");
+
+  playerContainer.innerHTML = `
+    <iframe width="100%" height="250" src="https://www.youtube.com/embed/${videoId}?autoplay=1" 
+      frameborder="0" allowfullscreen allow="autoplay; encrypted-media"></iframe>
+    <br/>
+    <button onclick="backToResults()">🔙 Kembali ke Hasil</button>
+  `;
+
+  playerContainer.style.display = "block";
+  resultsContainer.style.display = "none";
+}
+
+function backToResults() {
+  document.getElementById("player-container").style.display = "none";
+  document.getElementById("results").style.display = "block";
 }
 
 function downloadVideo(videoId) {
-  const url = `https://www.y2mate.com/youtube/${videoId}`; // atau ganti dengan layanan converter lain
+  const url = `https://www.y2mate.com/youtube/${videoId}`;
   window.open(url, "_blank");
 }
