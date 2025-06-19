@@ -1,91 +1,94 @@
-const API_KEY = 'AIzaSyBXEhmJ_a91vXpSiSnkRpi6_WbVTL2Vz0A'; // Ganti dengan API key Anda
-let nextPageToken = '';
-let currentQuery = '';
+document.addEventListener('DOMContentLoaded', function () {
+    // Inisialisasi Telegram Web App
+    const tg = window.Telegram.WebApp;
+    tg.ready();
 
-// Fungsi untuk mengambil video dari YouTube
-async function fetchVideos(query, loadMore = false) {
-  // Validasi query
-  if (!query || typeof query !== 'string' || query.trim() === '') {
-    console.error('Query kosong atau tidak valid.');
-    return;
-  }
+    // --- KONFIGURASI PENTING ---
+    const YOUTUBE_API_KEY = 'AIzaSyBXEhmJ_a91vXpSiSnkRpi6_WbVTL2Vz0A'; 
+    // -------------------------
 
-  // Simpan query untuk pemuatan lebih banyak
-  if (!loadMore) {
-    currentQuery = query;
-    nextPageToken = ''; // reset saat pencarian baru
-    document.getElementById('videoResults').innerHTML = ''; // kosongkan hasil sebelumnya
-  }
+    const searchButton = document.getElementById('searchButton');
+    const searchInput = document.getElementById('searchInput');
+    const resultsContainer = document.getElementById('results');
+    const loadingSpinner = document.getElementById('loading');
+    
+    // Fungsi untuk melakukan pencarian
+    const performSearch = async () => {
+        const query = searchInput.value.trim();
+        if (!query) {
+            resultsContainer.innerHTML = '<div class="col-12 text-center"><p class="text-muted">Silakan masukkan kata kunci pencarian.</p></div>';
+            return;
+        }
 
-  const apiUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(query)}&type=video&maxResults=10&key=${API_KEY}`
-    + (nextPageToken ? `&pageToken=${nextPageToken}` : '');
+        if (!YOUTUBE_API_KEY || YOUTUBE_API_KEY === 'GANTI_DENGAN_API_KEY_ANDA') {
+            resultsContainer.innerHTML = '<div class="alert alert-danger" role="alert"><strong>Kesalahan:</strong> API Key YouTube belum diatur. Silakan edit file script.js.</div>';
+            return;
+        }
 
-  try {
-    const response = await fetch(apiUrl);
-    const data = await response.json();
+        // Tampilkan loading dan bersihkan hasil lama
+        loadingSpinner.classList.remove('d-none');
+        resultsContainer.innerHTML = '';
 
-    if (data.error) {
-      throw new Error(data.error.message);
-    }
+        const maxResults = 12;
+        const apiUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(query)}&maxResults=${maxResults}&type=video&key=${YOUTUBE_API_KEY}`;
 
-    nextPageToken = data.nextPageToken || '';
-    displayVideos(data.items);
-  } catch (error) {
-    console.error('Error:', error);
-    showError(`YouTube API Error: ${error.message}`);
-  }
-}
+        try {
+            const response = await fetch(apiUrl);
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(`Error ${response.status}: ${errorData.error.message}`);
+            }
+            const data = await response.json();
+            displayResults(data.items);
+        } catch (error) {
+            console.error('Error fetching YouTube data:', error);
+            resultsContainer.innerHTML = `<div class="alert alert-danger" role="alert"><strong>Gagal mengambil data:</strong> ${error.message}</div>`;
+        } finally {
+            // Sembunyikan loading
+            loadingSpinner.classList.add('d-none');
+        }
+    };
 
-// Tampilkan video ke dalam layout
-function displayVideos(videos) {
-  const resultsContainer = document.getElementById('videoResults');
+    // Fungsi untuk menampilkan hasil
+    const displayResults = (videos) => {
+        if (videos.length === 0) {
+            resultsContainer.innerHTML = '<div class="col-12 text-center"><p class="text-muted">Video tidak ditemukan.</p></div>';
+            return;
+        }
 
-  videos.forEach(video => {
-    const videoId = video.id.videoId;
-    const title = video.snippet.title;
-    const thumbnail = video.snippet.thumbnails.medium.url;
+        videos.forEach(video => {
+            const videoId = video.id.videoId;
+            const title = video.snippet.title;
+            const channelTitle = video.snippet.channelTitle;
+            const thumbnailUrl = video.snippet.thumbnails.high.url;
+            const videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
 
-    const videoCard = `
-      <div class="col-md-6 mb-4">
-        <div class="card h-100 shadow-sm">
-          <img src="${thumbnail}" class="card-img-top" alt="${title}">
-          <div class="card-body">
-            <h5 class="card-title">${title}</h5>
-            <a href="https://www.youtube.com/watch?v=${videoId}" target="_blank" class="btn btn-danger btn-sm">Tonton</a>
-          </div>
-        </div>
-      </div>
-    `;
+            const videoElement = `
+                <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
+                    <a href="${videoUrl}" target="_blank" class="text-decoration-none">
+                        <div class="card video-card h-100 shadow-sm">
+                            <img src="${thumbnailUrl}" class="card-img-top" alt="Thumbnail ${title}">
+                            <div class="card-body d-flex flex-column">
+                                <h5 class="card-title text-dark">${title}</h5>
+                                <p class="card-text mt-auto"><i class="bi bi-person-video"></i> ${channelTitle}</p>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            `;
+            resultsContainer.innerHTML += videoElement;
+        });
+    };
 
-    resultsContainer.innerHTML += videoCard;
-  });
-}
-
-// Tampilkan error dalam alert
-function showError(message) {
-  const alertContainer = document.getElementById('alertContainer');
-  alertContainer.innerHTML = `
-    <div class="alert alert-danger shadow-sm" role="alert">
-      ${message}
-    </div>
-  `;
-}
-
-// Event handler pencarian
-document.getElementById('searchForm').addEventListener('submit', (e) => {
-  e.preventDefault();
-  const query = document.getElementById('searchInput').value.trim();
-  fetchVideos(query);
-});
-
-// Event handler tombol "Muat Lebih Banyak"
-document.getElementById('loadMoreBtn').addEventListener('click', () => {
-  fetchVideos(currentQuery, true);
-});
-
-// Jalankan pencarian acak saat halaman pertama kali dibuka
-document.addEventListener('DOMContentLoaded', () => {
-  const randomKeywords = ['musik', 'trailer', 'berita', 'vlog', 'tutorial'];
-  const randomQuery = randomKeywords[Math.floor(Math.random() * randomKeywords.length)];
-  fetchVideos(randomQuery);
+    // Tambahkan event listener untuk tombol dan input
+    searchButton.addEventListener('click', performSearch);
+    searchInput.addEventListener('keypress', (event) => {
+        if (event.key === 'Enter') {
+            performSearch();
+        }
+    });
+    
+    // Memberikan warna tema dari Telegram ke UI
+    document.documentElement.style.setProperty('--tg-theme-bg-color', tg.backgroundColor);
+    document.documentElement.style.setProperty('--tg-theme-text-color', tg.textColor);
 });
