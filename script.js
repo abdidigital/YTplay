@@ -2,9 +2,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const tg = window.Telegram.WebApp;
     tg.ready();
 
-    // --- KONFIGURASI PENTING ---
     const YOUTUBE_API_KEY = 'AIzaSyAkgcQAn-vxpxp2UoPZ2zQLKwfVNLWRtl0'; 
-    // -------------------------
 
     const searchButton = document.getElementById('searchButton');
     const searchInput = document.getElementById('searchInput');
@@ -19,16 +17,10 @@ document.addEventListener('DOMContentLoaded', function () {
     const youtubeIframe = document.getElementById('youtubePlayer'); 
     const videoModalLabel = document.getElementById('videoModalLabel');
 
-    // Elemen untuk Video Terkait - DIHAPUS KARENA SUDAH TIDAK ADA DI HTML
-    // const relatedVideosContainer = document.getElementById('relatedVideosContainer');
-    // const relatedVideosLoading = document.getElementById('relatedVideosLoading');
-    // const relatedArtistName = document.getElementById('relatedArtistName');
-
     let youtubePlayerAPI; 
     let currentVideoPlaylist = []; 
     let currentVideoIndex = -1; 
 
-    // --- YouTube IFrame Player API Functions ---
     window.onYouTubeIframeAPIReady = function() {
         console.log('YouTube IFrame Player API is ready.');
         youtubePlayerAPI = new YT.Player('youtubePlayer', {
@@ -49,72 +41,51 @@ document.addEventListener('DOMContentLoaded', function () {
             console.log('Video selesai. Mencoba memutar video selanjutnya...');
             playNextVideoInPlaylist();
         }
-        console.log('Player state changed to:', event.data);
     }
 
     function onPlayerError(event) {
         console.error('YouTube Player Error:', event.data);
         let errorMessage = 'Terjadi kesalahan saat memutar video.';
         if (event.data === 100 || event.data === 101 || event.data === 150) {
-            errorMessage = 'Video tidak dapat diputar atau dibatasi oleh pemilik.';
+            errorMessage = 'Video tidak dapat diputar atau dibatasi.';
         } else if (event.data === 2) {
-            errorMessage = 'ID video tidak valid atau parameter salah.';
-        } else if (event.data === 5) {
-            errorMessage = 'Terjadi kesalahan pada pemutar HTML5.';
+            errorMessage = 'ID video tidak valid.';
         }
         alert(errorMessage + ' Silakan coba video lain.');
-        videoModal.hide(); 
+        videoModal.hide();
     }
 
-    // --- Fungsi untuk memutar video di modal ---
-    // Parameter channelTitle sekarang tidak digunakan untuk related video, tapi tetap dipertahankan
-    // karena masih dipassing dari event listener kartu utama.
-    const playVideoInModal = (videoId, title, playlist = [], startIndex = -1, channelTitle = '') => { 
-        console.log('playVideoInModal dipanggil. Video ID:', videoId, 'Judul Video:', title);
+    const playVideoInModal = (videoId, title, playlist = [], startIndex = -1) => {
         videoModalLabel.textContent = title;
         currentVideoPlaylist = playlist; 
         currentVideoIndex = startIndex; 
 
         if (youtubePlayerAPI && typeof youtubePlayerAPI.loadVideoById === 'function') {
+            console.log('Memuat video dengan YouTube Player API:', videoId);
             youtubePlayerAPI.loadVideoById(videoId);
         } else {
             youtubeIframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&enablejsapi=1`;
             console.warn('YouTube Player API belum siap atau gagal. Memuat video langsung ke iframe.');
         }
         videoModal.show();
-
-        // --- Panggilan ke fetchAndDisplayRelatedVideos DIHAPUS DI SINI ---
-        // Karena bagian related video sudah dihapus dari HTML
     };
 
-    // --- Fungsi untuk memutar video selanjutnya dalam playlist ---
     const playNextVideoInPlaylist = () => {
-        console.log('playNextVideoInPlaylist called. Current playlist length:', currentVideoPlaylist.length, 'Current index:', currentVideoIndex);
         if (currentVideoPlaylist.length > 0 && currentVideoIndex < currentVideoPlaylist.length - 1) {
-            currentVideoIndex++; 
+            currentVideoIndex++;
             const nextVideo = currentVideoPlaylist[currentVideoIndex];
+            // ID video dijamin ada di nextVideo.id.videoId karena sudah di-map sebelumnya
             const nextVideoId = nextVideo.id.videoId; 
             const nextVideoTitle = nextVideo.snippet.title;
-            const nextChannelTitle = nextVideo.snippet.channelTitle;
 
-            console.log(`Memutar video selanjutnya: ${nextVideoTitle} (ID: ${nextVideoId}) dari ${nextChannelTitle}`);
-            playVideoInModal(nextVideoId, nextVideoTitle, currentVideoPlaylist, currentVideoIndex, nextChannelTitle);
+            console.log(`Memutar video selanjutnya: ${nextVideoTitle} (ID: ${nextVideoId})`);
+            playVideoInModal(nextVideoId, nextVideoTitle, currentVideoPlaylist, currentVideoIndex);
         } else {
             console.log('Playlist habis atau tidak ada video selanjutnya. Menutup modal.');
-            videoModal.hide(); 
+            videoModal.hide();
         }
     };
 
-    // --- Fungsi fetchAndDisplayRelatedVideos DIHAPUS SELURUHNYA ---
-    // Karena sudah tidak digunakan
-    /*
-    const fetchAndDisplayRelatedVideos = async (videoTitle, currentVideoId) => {
-        // ... (Kode ini dihapus)
-    };
-    */
-
-
-    // Fungsi untuk melakukan pencarian
     const performSearch = async () => {
         const query = searchInput.value.trim();
         if (!query) {
@@ -143,8 +114,9 @@ document.addEventListener('DOMContentLoaded', function () {
             }
             const data = await response.json();
             
+            // --- PERBAIKAN: Map items agar id.videoId selalu ada ---
             currentVideoPlaylist = data.items.map(item => ({
-                id: { videoId: item.id.videoId || item.id }, 
+                id: { videoId: item.id.videoId || item.id }, // Pastikan id.videoId selalu ada
                 snippet: item.snippet,
             }));
             console.log('Playlist setelah pencarian:', currentVideoPlaylist);
@@ -158,7 +130,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     };
 
-    // Fungsi untuk menampilkan hasil
     const displayResults = (videos, title = 'Video') => {
         if (videos.length === 0) {
             resultsContainer.innerHTML = '<div class="col-12 text-center"><p class="text-muted">Video tidak ditemukan.</p></div>';
@@ -173,7 +144,7 @@ document.addEventListener('DOMContentLoaded', function () {
         videos.forEach((video, index) => { 
             const videoId = video.id.videoId || video.id; 
             const videoTitle = video.snippet.title;
-            const channelTitle = video.snippet.channelTitle; 
+            const channelTitle = video.snippet.channelTitle;
             const thumbnailUrl = video.snippet.thumbnails.high.url;
 
             const videoElement = `
@@ -182,7 +153,6 @@ document.addEventListener('DOMContentLoaded', function () {
                          data-video-id="${videoId}" 
                          data-video-title="${encodeURIComponent(videoTitle)}"
                          data-video-index="${index}"  
-                         data-channel-title="${encodeURIComponent(channelTitle)}" 
                          style="cursor: pointer;">
                         <img src="${thumbnailUrl}" class="card-img-top rounded-top-3" alt="Thumbnail ${videoTitle}">
                         <div class="card-body d-flex flex-column">
@@ -207,48 +177,34 @@ document.addEventListener('DOMContentLoaded', function () {
         
         document.querySelectorAll('.download-btn').forEach(button => {
             button.addEventListener('click', (e) => {
-                e.stopPropagation(); 
+                e.stopPropagation();
                 const videoId = button.dataset.videoId;
                 const videoTitle = decodeURIComponent(button.dataset.videoTitle);
-                
                 alert(`Mengunduh "${videoTitle}"... Fitur unduh sedang diproses di server!`);
             });
         });
     };
     
-    // Event listener untuk memutar video saat kartu diklik
     resultsContainer.addEventListener('click', (event) => {
         const card = event.target.closest('.video-card');
         if (card) {
             const videoId = card.dataset.videoId;
-            const videoTitle = decodeURIComponent(card.dataset.videoTitle); 
+            const videoTitle = decodeURIComponent(card.dataset.videoTitle);
             const videoIndex = parseInt(card.dataset.videoIndex); 
             
-            let channelTitle = ''; // channelTitle tetap diambil untuk log atau potensi penggunaan lain
-            if (currentVideoPlaylist[videoIndex] && currentVideoPlaylist[videoIndex].snippet) {
-                channelTitle = currentVideoPlaylist[videoIndex].snippet.channelTitle;
-            } else {
-                channelTitle = decodeURIComponent(card.dataset.channelTitle || '');
-            }
-
-            playVideoInModal(videoId, videoTitle, currentVideoPlaylist, videoIndex, channelTitle); 
+            // Menggunakan currentVideoPlaylist yang sudah di-map dan dijamin konsisten
+            playVideoInModal(videoId, videoTitle, currentVideoPlaylist, videoIndex);
         }
     });
 
-    // Event listener untuk menghentikan video saat modal ditutup
     videoModalEl.addEventListener('hidden.bs.modal', () => {
         if (youtubePlayerAPI && typeof youtubePlayerAPI.stopVideo === 'function') {
-            youtubePlayerAPI.stopVideo(); 
+            youtubePlayerAPI.stopVideo();
             console.log('Video dihentikan.');
         }
         youtubeIframe.src = ''; 
-        // Baris-baris ini DIHAPUS karena elemen-elemen related video sudah tidak ada
-        // relatedVideosContainer.innerHTML = '';
-        // relatedVideosLoading.classList.add('d-none');
-        // relatedArtistName.textContent = 'Artis Ini';
     });
     
-    // Tambahkan event listener untuk tombol dan input pencarian
     searchButton.addEventListener('click', performSearch);
     searchInput.addEventListener('keypress', (event) => {
         if (event.key === 'Enter') {
@@ -256,13 +212,12 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
     
-    // --- Implementasi Tampilan Default Kategori Random dan Kategori yang Bisa Diklik ---
     const DEFAULT_CATEGORIES = [
-        { id: '10', name: 'Musik' },     
-        { id: '17', name: 'Olahraga' },   
-        { id: '20', name: 'Gaming' },     
-        { id: '24', name: 'Hiburan' },   
-        { id: '26', name: 'Gaya & Tutorial' }       
+        { id: '10', name: 'Musik' },
+        { id: '17', name: 'Olahraga' },
+        { id: '20', name: 'Gaming' },
+        { id: '24', name: 'Hiburan' },
+        { id: '26', name: 'Gaya & Tutorial' }
     ];
 
     const displayDefaultCategoryVideos = async (categoryId = null, categoryName = 'Video Populer') => {
@@ -286,14 +241,14 @@ document.addEventListener('DOMContentLoaded', function () {
             }
             const data = await response.json();
             
+            // --- PERBAIKAN: Map items agar id.videoId selalu ada ---
             currentVideoPlaylist = data.items.map(item => ({
-                id: { videoId: item.id.videoId || item.id }, 
+                id: { videoId: item.id.videoId || item.id }, // Pastikan id.videoId selalu ada
                 snippet: item.snippet,
             }));
             console.log('Playlist setelah memuat kategori:', currentVideoPlaylist);
 
             displayResults(data.items, categoryName);
-
         } catch (error) {
             console.error('Error fetching default videos:', error);
             resultsContainer.innerHTML = `<div class="alert alert-danger" role="alert"><strong>Gagal memuat video:</strong> ${error.message}</div>`;
@@ -302,9 +257,8 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     };
 
-    // Tampilkan kategori yang bisa diklik
     const displayCategories = () => {
-        categoryContainer.innerHTML = ''; 
+        categoryContainer.innerHTML = '';
         
         DEFAULT_CATEGORIES.forEach(cat => {
             const button = document.createElement('button');
@@ -329,7 +283,6 @@ document.addEventListener('DOMContentLoaded', function () {
     displayCategories();
     displayDefaultCategoryVideos(); 
     
-    // Memberikan warna tema dari Telegram ke UI
     document.documentElement.style.setProperty('--tg-theme-bg-color', tg.backgroundColor);
     document.documentElement.style.setProperty('--tg-theme-text-color', tg.textColor);
     document.documentElement.style.setProperty('--tg-theme-hint-color', tg.hintColor);
@@ -338,7 +291,6 @@ document.addEventListener('DOMContentLoaded', function () {
     document.documentElement.style.setProperty('--tg-theme-button-text-color', tg.buttonTextColor);
 
 
-    // --- Muat YouTube IFrame Player API secara asinkron ---
     const tag = document.createElement('script');
     tag.src = "https://www.youtube.com/iframe_api"; 
     const firstScriptTag = document.getElementsByTagName('script')[0];
