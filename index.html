@@ -1,73 +1,82 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>YouTube Player WebApp</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>YouTube WebApp</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
     body {
-      background: #f8f9fa;
-      padding: 20px;
+      background-color: #f9f9f9;
     }
-
     #results {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
       gap: 1rem;
       margin-top: 20px;
     }
-
     .video-card {
       border: 1px solid #ddd;
       border-radius: 8px;
       overflow: hidden;
       background: white;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      padding: 10px;
     }
-
     .video-card img {
       width: 100%;
-      height: auto;
+      border-radius: 5px;
     }
-
     .video-card h6 {
       font-size: 14px;
-      padding: 8px;
-      margin: 0;
+      margin-top: 8px;
+      margin-bottom: 8px;
     }
-
     .video-card .btn-group {
       display: flex;
-      justify-content: space-around;
-      padding: 8px;
+      justify-content: space-between;
     }
   </style>
 </head>
 <body>
 
-  <div class="container">
-    <div class="text-center mb-4">
-      <img src="https://upload.wikimedia.org/wikipedia/commons/b/b8/YouTube_Logo_2017.svg" alt="YouTube Logo" width="180" />
+  <!-- Header -->
+  <header class="bg-white shadow-sm mb-4">
+    <div class="container py-3 d-flex align-items-center justify-content-between">
+      <div class="d-flex align-items-center gap-2">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/b/b8/YouTube_Logo_2017.svg" alt="YouTube Logo" height="32" />
+        <span class="fs-5 fw-bold text-danger">YouTube WebApp</span>
+      </div>
+      <span class="text-muted small">🔎 Cari & Putar Video</span>
     </div>
+  </header>
 
+  <!-- Search & Results -->
+  <div class="container">
     <div class="search d-flex gap-2 justify-content-center mb-3">
       <input type="text" id="query" class="form-control w-50" placeholder="Cari video..." />
       <button class="btn btn-danger" onclick="searchVideos()">Cari</button>
     </div>
 
-    <!-- Kontainer Player Video -->
-    <div id="player-container" style="display: none;"></div>
+    <!-- Player -->
+    <div id="player-container" style="display:none;"></div>
 
-    <!-- Slot Iklan Di Bawah Player -->
+    <!-- Iklan di bawah player -->
     <div id="ad-player" class="my-3 text-center" style="display: none;">
       <script async="async" data-cfasync="false" src="//pl26955455.profitableratecpm.com/e3b9b0e9cdd83dea5f5d3e2b633ff801/invoke.js"></script>
       <div id="container-e3b9b0e9cdd83dea5f5d3e2b633ff801"></div>
     </div>
 
-    <!-- Hasil Pencarian Grid -->
+    <!-- Hasil pencarian -->
     <div id="results"></div>
   </div>
+
+  <!-- Footer -->
+  <footer class="bg-light text-center text-muted mt-5 py-3">
+    <div class="container">
+      <small>© 2025 YouTube WebApp by <strong>Bot Kamu</strong>. Bukan layanan resmi YouTube.</small>
+    </div>
+  </footer>
 
   <script src="script.js"></script>
 </body>
